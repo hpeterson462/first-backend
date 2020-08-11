@@ -1,6 +1,7 @@
+require('dotenv').config();
 const express = require('express');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 const cors = require('cors');
 const { geoData } = require('./data/geo.js');
 const weatherData = require('./data/weather.js');
@@ -15,7 +16,7 @@ function getLatLong(cityName) {
         formatted_query: city.display_name,
         latitude: city.lat,
         longitude: city.lon
-    }
+    };
 }
 
 app.get('/location', (req, res) => {
