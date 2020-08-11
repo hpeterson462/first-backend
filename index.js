@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const app = express();
-const port = process.env.PORT || 3000;
+const port = 3000;
 const cors = require('cors');
 const weatherData = require('./data/weather.js');
 const request = require('superagent');
@@ -14,7 +14,7 @@ const { GEOCODE_API_KEY,
 
 //location api
 async function getLatLong(cityName) {
-    const response = await request.get(`https://us1.locationiq.com/v1/search.php?key=${GEOCODE_API_KEY}& q=${cityName}& format=json`);
+    const response = await request.get(`https://us1.locationiq.com/v1/search.php?key=${GEOCODE_API_KEY}&q=${cityName}& format=json`);
 
     const city = response.body[0];
 
@@ -38,17 +38,17 @@ app.get('/location', async (req, res) => {
 });
 
 //weather api
-function getWeather(lat, lon) {
-    const data = await request.get(`https://api.weatherbit.io/v2.0/forecast/daily?&lat=38.123&lon=-78.543&key=${WEATHER_API_KEY}`)
+async function getWeather(lat, lon) {
+    const response = await request.get(`https://api.weatherbit.io/v2.0/forecast/daily?&lat=38.123&lon=-78.543&key=${WEATHER_API_KEY}`)
 
-    const forecast = response.body[0];
+    const weatherItem = response.body[0];
     return {
         forecast: weatherItem.weather.description,
         time: new Date(weatherItem.ts * 1000)
     };
 }
 
-app.get('/weather', (req, res) => {
+app.get('/weather', async (req, res) => {
     try {
         const userLat = req.query.latitude;
         const userLong = req.query.longitude;
@@ -68,15 +68,17 @@ async function getHiking(lat, lng) {
     const trails = response.body[0];
 
     return {
-
+        trail: trails.name,
+        summary: trails.summary,
+        length: trails.length
     };
 }
 
-app.get('/location', async (req, res) => {
+app.get('/hiking', async (req, res) => {
     try {
-        const userInput = req.query.search;
+        const userTrail = req.query.search;
 
-        const mungedData = await getLatLong(userInput);
+        const mungedData = await getHiking(userTrail);
 
         res.json(mungedData);
     } catch (e) {
