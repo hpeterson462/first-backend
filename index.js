@@ -1,9 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 const cors = require('cors');
-const weatherData = require('./data/weather.js');
 const request = require('superagent');
 
 app.use(cors());
@@ -39,9 +38,10 @@ app.get('/location', async (req, res) => {
 
 //weather api
 async function getWeather(lat, lon) {
-    const response = await request.get(`https://api.weatherbit.io/v2.0/forecast/daily?&lat=38.123&lon=-78.543&key=${WEATHER_API_KEY}`)
+    const response = await request.get(`https://api.weatherbit.io/v2.0/forecast/daily?&lat=${lat}&lon=${lon}&key=${WEATHER_API_KEY}`);
 
     const weatherItem = response.body[0];
+
     return {
         forecast: weatherItem.weather.description,
         time: new Date(weatherItem.ts * 1000)
@@ -63,7 +63,7 @@ app.get('/weather', async (req, res) => {
 
 //hiking api
 async function getHiking(lat, lng) {
-    const response = await request.get(`https://www.hikingproject.com/data/get-trails?lat={lat}&lon={lng}&maxDistance=200&key=${HIKING_API_KEY}`);
+    const response = await request.get(`https://www.hikingproject.com/data/get-trails?lat=${lat}&lon=${lng}&maxDistance=200&key=${HIKING_API_KEY}`);
 
     const trails = response.body[0];
 
@@ -74,11 +74,12 @@ async function getHiking(lat, lng) {
     };
 }
 
-app.get('/hiking', async (req, res) => {
+app.get('/trails', async (req, res) => {
     try {
-        const userTrail = req.query.search;
+        const userLat = req.query.latitude;
+        const userLong = req.query.longitude;
 
-        const mungedData = await getHiking(userTrail);
+        const mungedData = await getHiking(userLat, userLong);
 
         res.json(mungedData);
     } catch (e) {
@@ -88,4 +89,4 @@ app.get('/hiking', async (req, res) => {
 
 app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`);
-})
+});
