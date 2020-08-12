@@ -40,12 +40,14 @@ app.get('/location', async (req, res) => {
 async function getWeather(lat, lon) {
     const response = await request.get(`https://api.weatherbit.io/v2.0/forecast/daily?&lat=${lat}&lon=${lon}&key=${WEATHER_API_KEY}`);
 
-    const weatherItem = response.body[0];
-
-    return {
-        forecast: weatherItem.weather.description,
-        time: new Date(weatherItem.ts * 1000)
-    };
+    const weather = response.body.data;
+    const mungedWeather = weather.map((weatherItem) => {
+        return {
+            forecast: weatherItem.weather.description,
+            time: new Date(weatherItem.ts * 1000)
+        };
+    });
+    return mungedWeather;
 }
 
 app.get('/weather', async (req, res) => {
@@ -65,13 +67,25 @@ app.get('/weather', async (req, res) => {
 async function getHiking(lat, lng) {
     const response = await request.get(`https://www.hikingproject.com/data/get-trails?lat=${lat}&lon=${lng}&maxDistance=200&key=${HIKING_API_KEY}`);
 
-    const trails = response.body[0];
+    const trails = response.body.trails;
+    const mungedTrails = trails.map((trail) => {
 
-    return {
-        trail: trails.name,
-        summary: trails.summary,
-        length: trails.length
-    };
+        return {
+            name: trail.name,
+            location: trail.location,
+            length: trail.length,
+            stars: trail.stars,
+            star_votes: trail.starVotes,
+            description: trail.summary,
+            website: trail.url,
+            conditions: `${trail.conditionStatus}:${trail.conditionDetails}`,
+            condition_date: trail.conditionDate.split(' ')[0],
+            condition_time: trail.conditionDate.split(' ')[1]
+
+
+        };
+    });
+    return mungedTrails;
 }
 
 app.get('/trails', async (req, res) => {
